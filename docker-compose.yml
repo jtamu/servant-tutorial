@@ -5,4 +5,5 @@ services:
     build: .
     volumes:
       - ./src:/opt/app/src
-    tty: true
+    ports:
+      - 8080:8080
