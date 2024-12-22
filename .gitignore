@@ -1,0 +1,10 @@
+*
+!Makefile
+!*.*
+!*/
+*.hi
+*.o
+
+cabal.project.local
+dist-newstyle/
+
