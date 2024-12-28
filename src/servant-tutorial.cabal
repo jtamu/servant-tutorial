@@ -65,15 +65,18 @@ executable servant-tutorial
 
   -- Modules included in this executable, other than Main.
   -- cabal-fmt: expand app -Main
-  other-modules:
+  other-modules:    Lib
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
 
   -- Other library packages from which modules are imported.
   build-depends:
-    , base        ^>=4.18.2.1
+    , aeson
+    , base            ^>=4.18.2.1
     , http-types
+    , servant-server
+    , time
     , wai
     , warp
 
