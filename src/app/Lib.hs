@@ -7,9 +7,9 @@ module Lib where
 import Data.Aeson (ToJSON)
 import Data.Time.Calendar (Day, fromGregorian)
 import GHC.Generics (Generic)
-import Servant ((:>), Get, JSON, Server, Proxy(Proxy), serve)
-import Network.Wai(Application)
-import Network.Wai.Handler.Warp(run)
+import Network.Wai (Application)
+import Network.Wai.Handler.Warp (run)
+import Servant (Get, JSON, Proxy (Proxy), Server, serve, (:>))
 
 data User = User
   { name :: String,
@@ -22,9 +22,9 @@ data User = User
 instance ToJSON User
 
 users :: [User]
-users = [
-  User { name = "Alice", age = 25, email = "alice@example.com", registration_date = (fromGregorian 2020 1 1) },
-  User { name = "Bob", age = 30, email = "bob@example.com", registration_date = (fromGregorian 2021 1 1) }
+users =
+  [ User {name = "Alice", age = 25, email = "alice@example.com", registration_date = fromGregorian 2020 1 1},
+    User {name = "Bob", age = 30, email = "bob@example.com", registration_date = fromGregorian 2021 1 1}
   ]
 
 type UserAPI1 = "users" :> Get '[JSON] [User]
