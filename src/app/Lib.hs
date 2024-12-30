@@ -9,7 +9,7 @@ import Data.Time.Calendar (Day, fromGregorian)
 import GHC.Generics (Generic)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
-import Servant (Capture, Get, Handler, JSON, Proxy (Proxy), Server, serve, (:<|>) ((:<|>)), (:>))
+import Servant (Capture, Get, Handler, JSON, Proxy (Proxy), QueryParam, Server, serve, (:<|>) ((:<|>)), (:>))
 
 data User = User
   { name :: String,
@@ -35,6 +35,7 @@ type API =
     :<|> "alice" :> Get '[JSON] User
     :<|> "bob" :> Get '[JSON] User
     :<|> "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
+    :<|> "hello" :> QueryParam "name" String :> Get '[JSON] HelloMessage
 
 data Position = Position
   { xCoord :: Int,
@@ -44,10 +45,16 @@ data Position = Position
 
 instance ToJSON Position
 
-type PositionAPI = "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
-
 positionAPIHandler :: Int -> Int -> Handler Position
 positionAPIHandler x y = return $ Position x y
+
+newtype HelloMessage = HelloMessage {msg :: String} deriving (Generic)
+
+instance ToJSON HelloMessage
+
+helloMessageAPIHandler :: Maybe String -> Handler HelloMessage
+helloMessageAPIHandler (Just s) = return HelloMessage {msg = "hello, " ++ s}
+helloMessageAPIHandler Nothing = return HelloMessage {msg = "hello, anonymous"}
 
 server :: Server API
 server =
@@ -55,6 +62,7 @@ server =
     :<|> return alice
     :<|> return bob
     :<|> positionAPIHandler
+    :<|> helloMessageAPIHandler
 
 userAPI :: Proxy API
 userAPI = Proxy
