@@ -4,12 +4,13 @@
 
 module Lib where
 
-import Data.Aeson (ToJSON)
+import Data.Aeson (FromJSON, ToJSON)
+import Data.List (intercalate)
 import Data.Time.Calendar (Day, fromGregorian)
 import GHC.Generics (Generic)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
-import Servant (Capture, Get, Handler, JSON, Proxy (Proxy), QueryParam, Server, serve, (:<|>) ((:<|>)), (:>))
+import Servant (Capture, Get, Handler, JSON, Post, Proxy (Proxy), QueryParam, ReqBody, Server, serve, (:<|>) ((:<|>)), (:>))
 
 data User = User
   { name :: String,
@@ -36,6 +37,7 @@ type API =
     :<|> "bob" :> Get '[JSON] User
     :<|> "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
     :<|> "hello" :> QueryParam "name" String :> Get '[JSON] HelloMessage
+    :<|> "marketing" :> ReqBody '[JSON] ClientInfo :> Post '[JSON] Email
 
 data Position = Position
   { xCoord :: Int,
@@ -56,6 +58,45 @@ helloMessageAPIHandler :: Maybe String -> Handler HelloMessage
 helloMessageAPIHandler (Just s) = return HelloMessage {msg = "hello, " ++ s}
 helloMessageAPIHandler Nothing = return HelloMessage {msg = "hello, anonymous"}
 
+data ClientInfo = ClientInfo
+  { clientName :: String,
+    clientEmail :: String,
+    clientAge :: Int,
+    clientInterestedIn :: [String]
+  }
+  deriving (Generic)
+
+instance FromJSON ClientInfo
+
+data Email = Email
+  { from :: String,
+    to :: String,
+    subject :: String,
+    body :: String
+  }
+  deriving (Generic)
+
+instance ToJSON Email
+
+emailForClient :: ClientInfo -> Email
+emailForClient c = Email from' to' subject' body'
+  where
+    from' = "great@company.com"
+    to' = clientEmail c
+    subject' = "Hey " ++ clientName c ++ ", we miss you!"
+    body' =
+      "Hi "
+        ++ clientName c
+        ++ ",\n\n"
+        ++ "Since you've recently turned "
+        ++ show (clientAge c)
+        ++ ", have you checked out our latest "
+        ++ intercalate ", " (clientInterestedIn c)
+        ++ " products? Give us a visit!"
+
+marketingAPIHandler :: ClientInfo -> Handler Email
+marketingAPIHandler c = return $ emailForClient c
+
 server :: Server API
 server =
   return users
@@ -63,6 +104,7 @@ server =
     :<|> return bob
     :<|> positionAPIHandler
     :<|> helloMessageAPIHandler
+    :<|> marketingAPIHandler
 
 userAPI :: Proxy API
 userAPI = Proxy
