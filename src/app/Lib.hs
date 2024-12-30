@@ -9,7 +9,7 @@ import Data.Time.Calendar (Day, fromGregorian)
 import GHC.Generics (Generic)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
-import Servant (Get, JSON, Proxy (Proxy), Server, serve, (:<|>) ((:<|>)), (:>))
+import Servant (Capture, Get, Handler, JSON, Proxy (Proxy), Server, serve, (:<|>) ((:<|>)), (:>))
 
 data User = User
   { name :: String,
@@ -30,18 +30,33 @@ bob = User {name = "Bob", age = 30, email = "bob@example.com", registration_date
 users :: [User]
 users = [alice, bob]
 
-type UserAPI1 =
+type API =
   "users" :> Get '[JSON] [User]
     :<|> "alice" :> Get '[JSON] User
     :<|> "bob" :> Get '[JSON] User
+    :<|> "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
 
-server :: Server UserAPI1
+data Position = Position
+  { xCoord :: Int,
+    yCoord :: Int
+  }
+  deriving (Generic)
+
+instance ToJSON Position
+
+type PositionAPI = "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
+
+positionAPIHandler :: Int -> Int -> Handler Position
+positionAPIHandler x y = return $ Position x y
+
+server :: Server API
 server =
   return users
     :<|> return alice
     :<|> return bob
+    :<|> positionAPIHandler
 
-userAPI :: Proxy UserAPI1
+userAPI :: Proxy API
 userAPI = Proxy
 
 app1 :: Application
