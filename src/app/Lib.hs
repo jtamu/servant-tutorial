@@ -4,6 +4,7 @@
 
 module Lib where
 
+import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Aeson (FromJSON, ToJSON)
 import Data.List (intercalate)
@@ -11,7 +12,7 @@ import Data.Time.Calendar (Day, fromGregorian)
 import GHC.Generics (Generic)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
-import Servant (Capture, Get, Handler, JSON, Post, Proxy (Proxy), QueryParam, ReqBody, Server, serve, (:<|>) ((:<|>)), (:>))
+import Servant (Capture, Get, Handler, JSON, Post, Proxy (Proxy), QueryParam, ReqBody, Server, err404, serve, (:<|>) ((:<|>)), (:>))
 
 data User = User
   { userId :: Int,
@@ -45,7 +46,10 @@ type API =
 
 getUserAPIHandler :: Int -> Handler User
 getUserAPIHandler reqId = do
-  return $ head ([user | user <- users, userId user == reqId])
+  let hitUsers = ([user | user <- users, userId user == reqId])
+  case hitUsers of
+    (x : _) -> return x
+    _ -> throwError err404
 
 data Position = Position
   { xCoord :: Int,
