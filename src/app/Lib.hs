@@ -12,7 +12,7 @@ import Data.Time.Calendar (Day, fromGregorian)
 import GHC.Generics (Generic)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
-import Servant (Capture, DeleteNoContent, Get, Handler, JSON, NoContent (NoContent), Post, PostCreated, Proxy (Proxy), QueryParam, ReqBody, Server, err404, serve, (:<|>) ((:<|>)), (:>))
+import Servant (Capture, DeleteNoContent, Get, Handler, JSON, NoContent (NoContent), Post, PostCreated, Proxy (Proxy), PutNoContent, QueryParam, ReqBody, Server, err404, serve, (:<|>) ((:<|>)), (:>))
 
 data User = User
   { userId :: Int,
@@ -40,6 +40,7 @@ type API =
   "users" :> Get '[JSON] [User]
     :<|> "users" :> ReqBody '[JSON] User :> PostCreated '[JSON] NoContent
     :<|> "users" :> Capture "userId" Int :> Get '[JSON] User
+    :<|> "users" :> Capture "userId" Int :> ReqBody '[JSON] User :> PutNoContent
     :<|> "users" :> Capture "userId" Int :> DeleteNoContent
     :<|> "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
     :<|> "hello" :> QueryParam "name" String :> Get '[JSON] HelloMessage
@@ -54,6 +55,13 @@ getUserAPIHandler reqId = do
   let hitUsers = ([user | user <- users, userId user == reqId])
   case hitUsers of
     (x : _) -> return x
+    _ -> throwError err404
+
+updateUserAPIHandler :: Int -> User -> Handler NoContent
+updateUserAPIHandler reqId _ = do
+  let hitUsers = ([user | user <- users, userId user == reqId])
+  case hitUsers of
+    (_ : _) -> return NoContent
     _ -> throwError err404
 
 deleteUserAPIHandler :: Int -> Handler NoContent
@@ -135,6 +143,7 @@ server =
   return users
     :<|> createUserAPIHandler
     :<|> getUserAPIHandler
+    :<|> updateUserAPIHandler
     :<|> deleteUserAPIHandler
     :<|> positionAPIHandler
     :<|> helloMessageAPIHandler
