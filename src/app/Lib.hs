@@ -12,7 +12,7 @@ import Data.Time.Calendar (Day, fromGregorian)
 import GHC.Generics (Generic)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
-import Servant (Capture, Get, Handler, JSON, Post, Proxy (Proxy), QueryParam, ReqBody, Server, err404, serve, (:<|>) ((:<|>)), (:>))
+import Servant (Capture, Get, Handler, JSON, NoContent (NoContent), Post, PostCreated, Proxy (Proxy), QueryParam, ReqBody, Server, err404, serve, (:<|>) ((:<|>)), (:>))
 
 data User = User
   { userId :: Int,
@@ -25,6 +25,8 @@ data User = User
 
 instance ToJSON User
 
+instance FromJSON User
+
 alice :: User
 alice = User {userId = 1, name = "Hoge", age = 25, email = "alice@example.com", registration_date = fromGregorian 2020 1 1}
 
@@ -36,13 +38,15 @@ users = [alice, bob]
 
 type API =
   "users" :> Get '[JSON] [User]
-    :<|> "alice" :> Get '[JSON] User
-    :<|> "bob" :> Get '[JSON] User
+    :<|> "users" :> ReqBody '[JSON] User :> PostCreated '[JSON] NoContent
     :<|> "users" :> Capture "userId" Int :> Get '[JSON] User
     :<|> "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
     :<|> "hello" :> QueryParam "name" String :> Get '[JSON] HelloMessage
     :<|> "marketing" :> ReqBody '[JSON] ClientInfo :> Post '[JSON] Email
     :<|> "myfile" :> Get '[JSON] FileContent
+
+createUserAPIHandler :: User -> Handler NoContent
+createUserAPIHandler _ = return NoContent
 
 getUserAPIHandler :: Int -> Handler User
 getUserAPIHandler reqId = do
@@ -121,8 +125,7 @@ fileContentHandler = do
 server :: Server API
 server =
   return users
-    :<|> return alice
-    :<|> return bob
+    :<|> createUserAPIHandler
     :<|> getUserAPIHandler
     :<|> positionAPIHandler
     :<|> helloMessageAPIHandler
