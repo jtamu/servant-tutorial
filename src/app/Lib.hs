@@ -14,7 +14,8 @@ import Network.Wai.Handler.Warp (run)
 import Servant (Capture, Get, Handler, JSON, Post, Proxy (Proxy), QueryParam, ReqBody, Server, serve, (:<|>) ((:<|>)), (:>))
 
 data User = User
-  { name :: String,
+  { userId :: Int,
+    name :: String,
     age :: Int,
     email :: String,
     registration_date :: Day
@@ -24,10 +25,10 @@ data User = User
 instance ToJSON User
 
 alice :: User
-alice = User {name = "Hoge", age = 25, email = "alice@example.com", registration_date = fromGregorian 2020 1 1}
+alice = User {userId = 1, name = "Hoge", age = 25, email = "alice@example.com", registration_date = fromGregorian 2020 1 1}
 
 bob :: User
-bob = User {name = "Bob", age = 30, email = "bob@example.com", registration_date = fromGregorian 2021 1 1}
+bob = User {userId = 2, name = "Bob", age = 30, email = "bob@example.com", registration_date = fromGregorian 2021 1 1}
 
 users :: [User]
 users = [alice, bob]
@@ -36,10 +37,15 @@ type API =
   "users" :> Get '[JSON] [User]
     :<|> "alice" :> Get '[JSON] User
     :<|> "bob" :> Get '[JSON] User
+    :<|> "users" :> Capture "userId" Int :> Get '[JSON] User
     :<|> "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
     :<|> "hello" :> QueryParam "name" String :> Get '[JSON] HelloMessage
     :<|> "marketing" :> ReqBody '[JSON] ClientInfo :> Post '[JSON] Email
     :<|> "myfile" :> Get '[JSON] FileContent
+
+getUserAPIHandler :: Int -> Handler User
+getUserAPIHandler reqId = do
+  return $ head ([user | user <- users, userId user == reqId])
 
 data Position = Position
   { xCoord :: Int,
@@ -113,6 +119,7 @@ server =
   return users
     :<|> return alice
     :<|> return bob
+    :<|> getUserAPIHandler
     :<|> positionAPIHandler
     :<|> helloMessageAPIHandler
     :<|> marketingAPIHandler
