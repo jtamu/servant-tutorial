@@ -37,15 +37,18 @@ users :: [User]
 users = [alice, bob]
 
 type API =
+  UserAPI
+    :<|> "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
+    :<|> "hello" :> QueryParam "name" String :> Get '[JSON] HelloMessage
+    :<|> "marketing" :> ReqBody '[JSON] ClientInfo :> Post '[JSON] Email
+    :<|> "myfile" :> Get '[JSON] FileContent
+
+type UserAPI =
   "users" :> Get '[JSON] [User]
     :<|> "users" :> ReqBody '[JSON] User :> PostCreated '[JSON] NoContent
     :<|> "users" :> Capture "userId" Int :> Get '[JSON] User
     :<|> "users" :> Capture "userId" Int :> ReqBody '[JSON] User :> PutNoContent
     :<|> "users" :> Capture "userId" Int :> DeleteNoContent
-    :<|> "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
-    :<|> "hello" :> QueryParam "name" String :> Get '[JSON] HelloMessage
-    :<|> "marketing" :> ReqBody '[JSON] ClientInfo :> Post '[JSON] Email
-    :<|> "myfile" :> Get '[JSON] FileContent
 
 createUserAPIHandler :: User -> Handler NoContent
 createUserAPIHandler _ = return NoContent
@@ -140,15 +143,19 @@ fileContentHandler = do
 
 server :: Server API
 server =
+  userServer
+    :<|> positionAPIHandler
+    :<|> helloMessageAPIHandler
+    :<|> marketingAPIHandler
+    :<|> fileContentHandler
+
+userServer :: Server UserAPI
+userServer =
   return users
     :<|> createUserAPIHandler
     :<|> getUserAPIHandler
     :<|> updateUserAPIHandler
     :<|> deleteUserAPIHandler
-    :<|> positionAPIHandler
-    :<|> helloMessageAPIHandler
-    :<|> marketingAPIHandler
-    :<|> fileContentHandler
 
 userAPI :: Proxy API
 userAPI = Proxy
