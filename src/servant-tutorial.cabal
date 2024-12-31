@@ -65,7 +65,9 @@ executable servant-tutorial
 
   -- Modules included in this executable, other than Main.
   -- cabal-fmt: expand app -Main
-  other-modules:    Lib
+  other-modules:
+    Lib
+    User
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
@@ -75,11 +77,11 @@ executable servant-tutorial
     , aeson
     , base            ^>=4.18.2.1
     , http-types
+    , mtl
     , servant-server
     , time
     , wai
     , warp
-    , mtl
 
   -- Directories containing source files.
   hs-source-dirs:   app
