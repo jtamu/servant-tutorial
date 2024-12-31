@@ -46,9 +46,11 @@ type API =
 type UserAPI =
   Get '[JSON] [User]
     :<|> ReqBody '[JSON] User :> PostCreated '[JSON] NoContent
-    :<|> Capture "userId" Int :> Get '[JSON] User
-    :<|> Capture "userId" Int :> ReqBody '[JSON] User :> PutNoContent
-    :<|> Capture "userId" Int :> DeleteNoContent
+    :<|> Capture "userId" Int
+      :> ( Get '[JSON] User
+             :<|> ReqBody '[JSON] User :> PutNoContent
+             :<|> DeleteNoContent
+         )
 
 createUserAPIHandler :: User -> Handler NoContent
 createUserAPIHandler _ = return NoContent
@@ -153,9 +155,10 @@ userServer :: Server UserAPI
 userServer =
   return users
     :<|> createUserAPIHandler
-    :<|> getUserAPIHandler
-    :<|> updateUserAPIHandler
-    :<|> deleteUserAPIHandler
+    :<|> \reqId ->
+      getUserAPIHandler reqId
+        :<|> updateUserAPIHandler reqId
+        :<|> deleteUserAPIHandler reqId
 
 userAPI :: Proxy API
 userAPI = Proxy
