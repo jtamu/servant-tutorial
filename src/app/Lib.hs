@@ -4,6 +4,7 @@
 
 module Lib where
 
+import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Aeson (FromJSON, ToJSON)
 import Data.List (intercalate)
 import Data.Time.Calendar (Day, fromGregorian)
@@ -38,6 +39,7 @@ type API =
     :<|> "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
     :<|> "hello" :> QueryParam "name" String :> Get '[JSON] HelloMessage
     :<|> "marketing" :> ReqBody '[JSON] ClientInfo :> Post '[JSON] Email
+    :<|> "myfile" :> Get '[JSON] FileContent
 
 data Position = Position
   { xCoord :: Int,
@@ -97,6 +99,15 @@ emailForClient c = Email from' to' subject' body'
 marketingAPIHandler :: ClientInfo -> Handler Email
 marketingAPIHandler c = return $ emailForClient c
 
+newtype FileContent = FileContent {content :: String} deriving (Generic)
+
+instance ToJSON FileContent
+
+fileContentHandler :: Handler FileContent
+fileContentHandler = do
+  content <- liftIO $ readFile "myfile.txt"
+  return $ FileContent content
+
 server :: Server API
 server =
   return users
@@ -105,6 +116,7 @@ server =
     :<|> positionAPIHandler
     :<|> helloMessageAPIHandler
     :<|> marketingAPIHandler
+    :<|> fileContentHandler
 
 userAPI :: Proxy API
 userAPI = Proxy
