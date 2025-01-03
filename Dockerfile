@@ -6,7 +6,7 @@ ARG APP_DIR="/opt/app"
 RUN curl -fsSL https://apt.cli.rs/pubkey.asc | tee -a /usr/share/keyrings/rust-tools.asc \
 	&& curl -fsSL https://apt.cli.rs/rust-tools.list | tee /etc/apt/sources.list.d/rust-tools.list \
 	&& apt update \
-	&& apt install -y watchexec-cli procps
+	&& apt install -y watchexec-cli procps libpq-dev
 
 # install ghcup
 RUN mkdir -p "${APP_DIR}/.ghcup/bin"

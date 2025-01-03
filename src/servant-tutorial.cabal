@@ -66,18 +66,27 @@ executable servant-tutorial
   -- Modules included in this executable, other than Main.
   -- cabal-fmt: expand app -Main
   other-modules:
+    DB
+    Domain.User
+    Entity.Country
+    Entity.User
     Lib
     User
 
   -- LANGUAGE extensions used by modules in this package.
-  -- other-extensions:
+  other-extensions: TemplateHaskell
 
   -- Other library packages from which modules are imported.
   build-depends:
     , aeson
-    , base            ^>=4.18.2.1
+    , base                   ^>=4.18.2.1
+    , HDBC
+    , HDBC-postgresql
     , http-types
     , mtl
+    , relational-query
+    , relational-query-HDBC
+    , relational-record
     , servant-server
     , time
     , wai
