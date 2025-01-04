@@ -1,13 +1,14 @@
 module Domain.User where
 
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Int (Int32)
 import Data.Time.Calendar (Day)
 import GHC.Generics (Generic)
 
 data User = User
-  { userId :: Int,
+  { userId :: Int32,
     name :: String,
-    age :: Int,
+    age :: Int32,
     email :: String,
     registration_date :: Day
   }
