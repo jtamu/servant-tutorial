@@ -63,10 +63,13 @@ toInsertData = UserDto |$| #name |*| #age |*| #email |*| #registrationDate
 insertUser :: Insert UserDto
 insertUser = insert toInsertData
 
-createUser :: UserDto -> IO ()
+domainToDto :: Du.User -> UserDto
+domainToDto user = UserDto {insertName = Du.name user, insertAge = fromIntegral $ Du.age user, insertEmail = Du.email user, insert_registration_date = Du.registration_date user}
+
+createUser :: Du.User -> IO ()
 createUser insertData = do
   conn <- connectPG
-  _ <- runInsert conn insertUser insertData
+  _ <- runInsert conn insertUser (domainToDto insertData)
   return ()
 
 deleteUser' :: Int32 -> Delete ()
@@ -87,8 +90,8 @@ updateUser' userId updateData = updateNoPH $ \(user :: Record Flat Users) -> do
   #registrationDate <-# value (insert_registration_date updateData)
   wheres $ user ! id' .=. value userId
 
-updateUser :: Int32 -> UserDto -> IO ()
+updateUser :: Int32 -> Du.User -> IO ()
 updateUser userId updateData = do
   conn <- connectPG
-  _ <- runUpdate conn (updateUser' userId updateData) ()
+  _ <- runUpdate conn (updateUser' userId (domainToDto updateData)) ()
   return ()
