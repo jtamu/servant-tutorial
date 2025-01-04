@@ -9,9 +9,11 @@
 module Entity.User where
 
 import DB (connectPG)
+import Data.Aeson (FromJSON)
 import Data.Functor.ProductIsomorphic ((|$|), (|*|))
 import Data.Int (Int32)
 import Data.Time (Day)
+import Database.HDBC (IConnection (commit))
 import Database.HDBC.Query.TH (defineTableFromDB, makeRelationalRecord)
 import Database.HDBC.Record.Query (runQuery')
 import Database.HDBC.Schema.PostgreSQL (driverPostgreSQL)
@@ -55,6 +57,8 @@ data UserDto = UserDto
   }
   deriving (Eq, Show, Generic)
 
+instance FromJSON UserDto
+
 $(makeRelationalRecord ''UserDto)
 
 toInsertData :: Pi Users UserDto
@@ -66,10 +70,11 @@ insertUser = insert toInsertData
 domainToDto :: Du.User -> UserDto
 domainToDto user = UserDto {insertName = Du.name user, insertAge = fromIntegral $ Du.age user, insertEmail = Du.email user, insert_registration_date = Du.registration_date user}
 
-createUser :: Du.User -> IO ()
+createUser :: UserDto -> IO ()
 createUser insertData = do
   conn <- connectPG
-  _ <- runInsert conn insertUser (domainToDto insertData)
+  _ <- runInsert conn insertUser insertData
+  commit conn
   return ()
 
 deleteUser' :: Int32 -> Delete ()
@@ -80,6 +85,7 @@ deleteUser :: Int32 -> IO ()
 deleteUser userId = do
   conn <- connectPG
   _ <- runDelete conn (deleteUser' userId) ()
+  commit conn
   return ()
 
 updateUser' :: Int32 -> UserDto -> Update ()
@@ -90,8 +96,12 @@ updateUser' userId updateData = updateNoPH $ \(user :: Record Flat Users) -> do
   #registrationDate <-# value (insert_registration_date updateData)
   wheres $ user ! id' .=. value userId
 
-updateUser :: Int32 -> Du.User -> IO ()
-updateUser userId updateData = do
+updateUser :: Du.User -> IO ()
+updateUser updateData = do
   conn <- connectPG
-  _ <- runUpdate conn (updateUser' userId (domainToDto updateData)) ()
+  _ <- runUpdate conn (updateUser' (Du.userId updateData) (domainToDto updateData)) ()
+  commit conn
   return ()
+
+updateUser'' :: Du.User -> UserDto -> Du.User
+updateUser'' user dto = user {Du.name = insertName dto, Du.age = insertAge dto, Du.email = insertEmail dto, Du.registration_date = insert_registration_date dto}
