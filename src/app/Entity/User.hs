@@ -47,7 +47,7 @@ getUserQuery userId = relation $ do
   wheres $ (u ! id') .=. value (fromIntegral userId)
   return u
 
-data InsertUser = InsertUser
+data UserDto = UserDto
   { insertName :: String,
     insertAge :: Int32,
     insertEmail :: String,
@@ -55,15 +55,15 @@ data InsertUser = InsertUser
   }
   deriving (Eq, Show, Generic)
 
-$(makeRelationalRecord ''InsertUser)
+$(makeRelationalRecord ''UserDto)
 
-toInsertData :: Pi Users InsertUser
-toInsertData = InsertUser |$| #name |*| #age |*| #email |*| #registrationDate
+toInsertData :: Pi Users UserDto
+toInsertData = UserDto |$| #name |*| #age |*| #email |*| #registrationDate
 
-insertUser :: Insert InsertUser
+insertUser :: Insert UserDto
 insertUser = insert toInsertData
 
-createUser :: InsertUser -> IO ()
+createUser :: UserDto -> IO ()
 createUser insertData = do
   conn <- connectPG
   _ <- runInsert conn insertUser insertData
@@ -79,7 +79,7 @@ deleteUser userId = do
   _ <- runDelete conn (deleteUser' userId) ()
   return ()
 
-updateUser' :: Int32 -> InsertUser -> Update ()
+updateUser' :: Int32 -> UserDto -> Update ()
 updateUser' userId updateData = updateNoPH $ \(user :: Record Flat Users) -> do
   #name <-# value (insertName updateData)
   #age <-# value (insertAge updateData)
@@ -87,7 +87,7 @@ updateUser' userId updateData = updateNoPH $ \(user :: Record Flat Users) -> do
   #registrationDate <-# value (insert_registration_date updateData)
   wheres $ user ! id' .=. value userId
 
-updateUser :: Int32 -> InsertUser -> IO ()
+updateUser :: Int32 -> UserDto -> IO ()
 updateUser userId updateData = do
   conn <- connectPG
   _ <- runUpdate conn (updateUser' userId updateData) ()
