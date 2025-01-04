@@ -15,8 +15,8 @@ import Data.Time (Day)
 import Database.HDBC.Query.TH (defineTableFromDB, makeRelationalRecord)
 import Database.HDBC.Record.Query (runQuery')
 import Database.HDBC.Schema.PostgreSQL (driverPostgreSQL)
-import Database.Relational (Insert, Pi, Relation, insert, query, relation, value, wheres, (.=.))
-import Database.Relational.Documentation (runInsert, (!))
+import Database.Relational (Delete, Flat, Insert, Pi, Record, Relation, deleteNoPH, insert, query, relation, value, wheres, (.=.))
+import Database.Relational.Documentation (runDelete, runInsert, (!))
 import Database.Relational.Type (relationalQuery)
 import Domain.User qualified as Du (User (User, age, email, name, registration_date, userId))
 import GHC.Generics (Generic)
@@ -67,4 +67,14 @@ createUser :: InsertUser -> IO ()
 createUser insertData = do
   conn <- connectPG
   _ <- runInsert conn insertUser insertData
+  return ()
+
+deleteUser' :: Int32 -> Delete ()
+deleteUser' userId = deleteNoPH $ \(user :: Record Flat Users) -> do
+  wheres $ user ! id' .=. value userId
+
+deleteUser :: Int32 -> IO ()
+deleteUser userId = do
+  conn <- connectPG
+  _ <- runDelete conn (deleteUser' userId) ()
   return ()
