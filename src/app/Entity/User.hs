@@ -33,7 +33,7 @@ getAllUsers = do
 toDomain :: Users -> Du.User
 toDomain u = Du.User {Du.userId = fromIntegral $ id u, Du.name = name u, Du.email = email u, Du.age = fromIntegral $ age u, Du.registration_date = registrationDate u}
 
-getUser :: Int -> IO (Maybe Du.User)
+getUser :: Int32 -> IO (Maybe Du.User)
 getUser userId = do
   conn <- connectPG
   us <- runQuery' conn (relationalQuery $ getUserQuery userId) ()
@@ -41,7 +41,7 @@ getUser userId = do
     (u : _) -> return $ Just $ toDomain u
     _ -> return Nothing
 
-getUserQuery :: Int -> Relation () Users
+getUserQuery :: Int32 -> Relation () Users
 getUserQuery userId = relation $ do
   u <- query users
   wheres $ (u ! id') .=. value (fromIntegral userId)
