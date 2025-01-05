@@ -16,10 +16,10 @@ import GHC.Generics (Generic)
 import Prelude hiding (id)
 
 data UserDto = UserDto
-  { insertName :: String,
-    insertAge :: Int32,
-    insertEmail :: String,
-    insert_registration_date :: Day
+  { name :: String,
+    age :: Int32,
+    email :: String,
+    registration_date :: Day
   }
   deriving (Eq, Show, Generic)
 
