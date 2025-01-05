@@ -61,6 +61,16 @@ instance FromJSON UserDto
 
 $(makeRelationalRecord ''UserDto)
 
+data UserUpdateDto = UserUpdateDto
+  { updName :: Maybe String,
+    updAge :: Maybe Int32,
+    updEmail :: Maybe String,
+    upd_registration_date :: Maybe Day
+  }
+  deriving (Eq, Show, Generic)
+
+instance FromJSON UserUpdateDto
+
 toInsertData :: Pi Users UserDto
 toInsertData = UserDto |$| #name |*| #age |*| #email |*| #registrationDate
 
@@ -103,5 +113,11 @@ updateUser updateData = do
   commit conn
   return ()
 
-updateUser'' :: Du.User -> UserDto -> Du.User
-updateUser'' user dto = user {Du.name = insertName dto, Du.age = insertAge dto, Du.email = insertEmail dto, Du.registration_date = insert_registration_date dto}
+updateUser'' :: Du.User -> UserUpdateDto -> Du.User
+updateUser'' user dto =
+  user
+    { Du.name = maybe (Du.name user) (\a -> a) (updName dto),
+      Du.age = maybe (Du.age user) (\a -> a) (updAge dto),
+      Du.email = maybe (Du.email user) (\a -> a) (updEmail dto),
+      Du.registration_date = maybe (Du.registration_date user) (\a -> a) (upd_registration_date dto)
+    }

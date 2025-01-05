@@ -7,7 +7,7 @@ import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Int (Int32)
 import Domain.User (User)
-import Entity.User (UserDto, createUser, deleteUser, getAllUsers, getUser, updateUser, updateUser'')
+import Entity.User (UserDto, UserUpdateDto, createUser, deleteUser, getAllUsers, getUser, updateUser, updateUser'')
 import Servant (Capture, DeleteNoContent, Get, Handler, JSON, NoContent (NoContent), PostCreated, PutNoContent, ReqBody, Server, err404, (:<|>) ((:<|>)), (:>))
 
 type UserAPI =
@@ -15,7 +15,7 @@ type UserAPI =
     :<|> ReqBody '[JSON] UserDto :> PostCreated '[JSON] NoContent
     :<|> Capture "userId" Int32
       :> ( Get '[JSON] User
-             :<|> ReqBody '[JSON] UserDto :> PutNoContent
+             :<|> ReqBody '[JSON] UserUpdateDto :> PutNoContent
              :<|> DeleteNoContent
          )
 
@@ -34,12 +34,8 @@ getUserAPIHandler reqId = do
     Just x -> return x
     Nothing -> throwError err404
 
-updateUserAPIHandler :: Int32 -> UserDto -> Handler NoContent
+updateUserAPIHandler :: Int32 -> UserUpdateDto -> Handler NoContent
 updateUserAPIHandler reqId updateData = do
-  -- let hitUsers = ([user | user <- users, userId user == reqId])
-  -- case hitUsers of
-  --   (_ : _) -> return NoContent
-  --   _ -> throwError err404
   maybeUser <- liftIO $ getUser reqId
   case maybeUser of
     Just user ->
