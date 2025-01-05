@@ -9,18 +9,18 @@
 module Entity.User where
 
 import DB (connectPG)
-import Data.Aeson (FromJSON)
 import Data.Functor.ProductIsomorphic ((|$|), (|*|))
 import Data.Int (Int32)
-import Data.Time (Day)
 import Database.HDBC (IConnection (commit))
-import Database.HDBC.Query.TH (defineTableFromDB, makeRelationalRecord)
+import Database.HDBC.Query.TH (defineTableFromDB)
 import Database.HDBC.Record.Query (runQuery')
 import Database.HDBC.Schema.PostgreSQL (driverPostgreSQL)
 import Database.Relational (Delete, Flat, Insert, Pi, Record, Relation, Update, deleteNoPH, insert, query, relation, updateNoPH, value, wheres, (.=.), (<-#))
 import Database.Relational.Documentation (runDelete, runInsert, runUpdate, (!))
 import Database.Relational.Type (relationalQuery)
 import Domain.User qualified as Du (User (User, age, email, name, registration_date, userId))
+import Dto.User (UserDto (UserDto, insertAge, insertEmail, insertName, insert_registration_date))
+import Dto.UserUpdate (UserUpdateDto (updAge, updEmail, updName, upd_registration_date))
 import GHC.Generics (Generic)
 import Prelude hiding (id)
 
@@ -48,28 +48,6 @@ getUserQuery userId = relation $ do
   u <- query users
   wheres $ (u ! id') .=. value (fromIntegral userId)
   return u
-
-data UserDto = UserDto
-  { insertName :: String,
-    insertAge :: Int32,
-    insertEmail :: String,
-    insert_registration_date :: Day
-  }
-  deriving (Eq, Show, Generic)
-
-instance FromJSON UserDto
-
-$(makeRelationalRecord ''UserDto)
-
-data UserUpdateDto = UserUpdateDto
-  { updName :: Maybe String,
-    updAge :: Maybe Int32,
-    updEmail :: Maybe String,
-    upd_registration_date :: Maybe Day
-  }
-  deriving (Eq, Show, Generic)
-
-instance FromJSON UserUpdateDto
 
 toInsertData :: Pi Users UserDto
 toInsertData = UserDto |$| #name |*| #age |*| #email |*| #registrationDate

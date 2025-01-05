@@ -68,6 +68,8 @@ executable servant-tutorial
   other-modules:
     DB
     Domain.User
+    Dto.User
+    Dto.UserUpdate
     Entity.Country
     Entity.User
     Lib

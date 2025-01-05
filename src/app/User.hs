@@ -7,7 +7,9 @@ import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Int (Int32)
 import Domain.User (User)
-import Entity.User (UserDto, UserUpdateDto, createUser, deleteUser, getAllUsers, getUser, updateUser, updateUser'')
+import Dto.User (UserDto)
+import Dto.UserUpdate (UserUpdateDto)
+import Entity.User (createUser, deleteUser, getAllUsers, getUser, updateUser, updateUser'')
 import Servant (Capture, DeleteNoContent, Get, Handler, JSON, NoContent (NoContent), PostCreated, PutNoContent, ReqBody, Server, err404, (:<|>) ((:<|>)), (:>))
 
 type UserAPI =
