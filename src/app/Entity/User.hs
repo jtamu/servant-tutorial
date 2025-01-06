@@ -23,6 +23,7 @@ import Dto.User qualified as DtoUser (UserDto (UserDto, age, email, name, regist
 import Dto.UserUpdate qualified as DtoUserUpd (UserUpdateDto (age, email, name, registration_date))
 import GHC.Generics (Generic)
 import Prelude hiding (id)
+import Data.Maybe (fromMaybe)
 
 $(defineTableFromDB connectPG driverPostgreSQL "public" "users" [''Show, ''Generic])
 
@@ -107,8 +108,8 @@ updateUser updateData = do
 updateUser'' :: Du.User -> DtoUserUpd.UserUpdateDto -> Du.User
 updateUser'' user dto =
   user
-    { Du.name = maybe (Du.name user) (\a -> a) (DtoUserUpd.name dto),
-      Du.age = maybe (Du.age user) (\a -> a) (DtoUserUpd.age dto),
-      Du.email = maybe (Du.email user) (\a -> a) (DtoUserUpd.email dto),
-      Du.registration_date = maybe (Du.registration_date user) (\a -> a) (DtoUserUpd.registration_date dto)
+    { Du.name = fromMaybe (Du.name user) (DtoUserUpd.name dto),
+      Du.age = fromMaybe (Du.age user) (DtoUserUpd.age dto),
+      Du.email = fromMaybe (Du.email user) (DtoUserUpd.email dto),
+      Du.registration_date = fromMaybe (Du.registration_date user) (DtoUserUpd.registration_date dto)
     }
