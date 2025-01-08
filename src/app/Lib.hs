@@ -11,7 +11,8 @@ import GHC.Generics (Generic)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Servant (Capture, Get, Handler, JSON, Post, Proxy (Proxy), QueryParam, ReqBody, Server, serve, (:<|>) ((:<|>)), (:>))
-import User (UserAPI, userServer)
+
+-- import User (UserAPI, userServer)
 
 data Position = Position
   { xCoord :: Int,
@@ -81,16 +82,18 @@ fileContentHandler = do
   return $ FileContent content
 
 type API =
-  "users" :> UserAPI
-    :<|> "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
+  -- "users" :> UserAPI
+  --   :<|> "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
+  "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
     :<|> "hello" :> QueryParam "name" String :> Get '[JSON] HelloMessage
     :<|> "marketing" :> ReqBody '[JSON] ClientInfo :> Post '[JSON] Email
     :<|> "myfile" :> Get '[JSON] FileContent
 
 server :: Server API
 server =
-  userServer
-    :<|> positionAPIHandler
+  -- userServer
+  --   :<|> positionAPIHandler
+  positionAPIHandler
     :<|> helloMessageAPIHandler
     :<|> marketingAPIHandler
     :<|> fileContentHandler
