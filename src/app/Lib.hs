@@ -5,14 +5,15 @@
 module Lib where
 
 import Control.Monad.IO.Class (MonadIO (liftIO))
+import DB (pgPool)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.List (intercalate)
+import Database.Persist.Postgresql (ConnectionPool)
 import GHC.Generics (Generic)
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Servant (Capture, Get, Handler, JSON, Post, Proxy (Proxy), QueryParam, ReqBody, Server, serve, (:<|>) ((:<|>)), (:>))
-
--- import User (UserAPI, userServer)
+import User (UserAPI, userServer)
 
 data Position = Position
   { xCoord :: Int,
@@ -82,18 +83,16 @@ fileContentHandler = do
   return $ FileContent content
 
 type API =
-  -- "users" :> UserAPI
-  --   :<|> "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
-  "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
+  "users" :> UserAPI
+    :<|> "position" :> Capture "x" Int :> Capture "y" Int :> Get '[JSON] Position
     :<|> "hello" :> QueryParam "name" String :> Get '[JSON] HelloMessage
     :<|> "marketing" :> ReqBody '[JSON] ClientInfo :> Post '[JSON] Email
     :<|> "myfile" :> Get '[JSON] FileContent
 
-server :: Server API
-server =
-  -- userServer
-  --   :<|> positionAPIHandler
-  positionAPIHandler
+server :: ConnectionPool -> Server API
+server pool =
+  userServer pool
+    :<|> positionAPIHandler
     :<|> helloMessageAPIHandler
     :<|> marketingAPIHandler
     :<|> fileContentHandler
@@ -101,8 +100,10 @@ server =
 userAPI :: Proxy API
 userAPI = Proxy
 
-app1 :: Application
-app1 = serve userAPI server
+app1 :: ConnectionPool -> Application
+app1 pool = serve userAPI (server pool)
 
 runServer :: IO ()
-runServer = run 8080 app1
+runServer = do
+  pool <- pgPool
+  run 8080 (app1 pool)

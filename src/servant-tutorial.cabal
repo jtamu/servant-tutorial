@@ -70,6 +70,7 @@ executable servant-tutorial
     Domain.User
     Dto.User
     Dto.UserUpdate
+    Entity.User
     Lib
     User
 
@@ -83,15 +84,23 @@ executable servant-tutorial
     , HDBC
     , HDBC-postgresql
     , http-types
+    , lens
+    , monad-logger
     , mtl
+    , persistent
+    , persistent-postgresql
     , product-isomorphic
     , relational-query
     , relational-query-HDBC
     , relational-record
+    , resourcet
     , servant-server
+    , text
     , time
+    , transformers
     , wai
     , warp
+    , yaml
 
   -- Directories containing source files.
   hs-source-dirs:   app

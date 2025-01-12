@@ -2,11 +2,15 @@ FROM haskell:9.6
 
 ARG APP_DIR="/opt/app"
 
+RUN apt install -y wget lsb-release
+
 # install watchexec (and other packages)
 RUN curl -fsSL https://apt.cli.rs/pubkey.asc | tee -a /usr/share/keyrings/rust-tools.asc \
 	&& curl -fsSL https://apt.cli.rs/rust-tools.list | tee /etc/apt/sources.list.d/rust-tools.list \
+	&& sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' \
+	&& wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
 	&& apt update \
-	&& apt install -y watchexec-cli procps libpq-dev
+	&& apt install -y watchexec-cli procps libpq-dev postgresql-client-14
 
 # install ghcup
 RUN mkdir -p "${APP_DIR}/.ghcup/bin"

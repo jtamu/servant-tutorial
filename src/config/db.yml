@@ -1,0 +1,6 @@
+user: "_env:PG_USER:user"
+password: "_env:PG_PASSWORD:password"
+host: "_env:PG_HOST:db"
+port: "_env:PG_PORT:5432"
+database: "_env:PG_DB:test"
+poolsize: "_env:PG_POOLSIZE:5"

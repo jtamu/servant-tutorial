@@ -9,7 +9,6 @@
 module Dto.User where
 
 import Data.Aeson (FromJSON)
-import Data.Int (Int32)
 import Data.Time (Day)
 import Database.HDBC.Query.TH (makeRelationalRecord)
 import GHC.Generics (Generic)
@@ -17,9 +16,9 @@ import Prelude hiding (id)
 
 data UserDto = UserDto
   { name :: String,
-    age :: Int32,
+    age :: Int,
     email :: String,
-    registration_date :: Day
+    registrationDate :: Day
   }
   deriving (Eq, Show, Generic)
 
