@@ -15,6 +15,7 @@
 
 module Entity.User where
 
+import Control.Lens (view)
 import Data.Int (Int64)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
@@ -32,7 +33,8 @@ import Database.Persist.Sql
     toSqlKey,
   )
 import Database.Persist.TH
-  ( mkMigrate,
+  ( MkPersistSettings (mpsGenerateLenses),
+    mkMigrate,
     mkPersist,
     persistLowerCase,
     share,
@@ -44,7 +46,7 @@ import Dto.UserUpdate qualified as UUDTO
 import GHC.Generics (Generic)
 
 share
-  [mkPersist sqlSettings, mkMigrate "migrateAll"]
+  [mkPersist sqlSettings {mpsGenerateLenses = True}, mkMigrate "migrateAll"]
   [persistLowerCase|
 User
     name String
@@ -77,30 +79,30 @@ mapUserToDomain :: Entity User -> DU.User
 mapUserToDomain (Entity userId user) =
   DU.User
     { DU.userId = fromSqlKey userId,
-      DU.name = userName user,
-      DU.age = userAge user,
-      DU.email = userEmail user,
-      DU.registrationDate = userRegistrationDate user
+      DU.name = view userName user,
+      DU.age = view userAge user,
+      DU.email = view userEmail user,
+      DU.registrationDate = view userRegistrationDate user
     }
 
 mapUserToEntity :: DU.User -> Entity User
 mapUserToEntity user =
   let record =
         User
-          { userName = DU.name user,
-            userAge = DU.age user,
-            userEmail = DU.email user,
-            userRegistrationDate = DU.registrationDate user
+          { _userName = DU.name user,
+            _userAge = DU.age user,
+            _userEmail = DU.email user,
+            _userRegistrationDate = DU.registrationDate user
           }
    in Entity (toSqlKey (DU.userId user)) record
 
 mapDtoToUser :: DTO.UserDto -> User
 mapDtoToUser user =
   User
-    { userName = DTO.name user,
-      userAge = DTO.age user,
-      userEmail = DTO.email user,
-      userRegistrationDate = DTO.registrationDate user
+    { _userName = DTO.name user,
+      _userAge = DTO.age user,
+      _userEmail = DTO.email user,
+      _userRegistrationDate = DTO.registrationDate user
     }
 
 createUser' :: ConnectionPool -> DTO.UserDto -> IO UserId
