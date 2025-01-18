@@ -123,10 +123,10 @@ updateUser' pool user = updateUser pool (mapUserToEntity user)
 
 updateUser'' :: DU.User -> UUDTO.UserUpdateDto -> DU.User
 updateUser'' user dto =
-  let user' = set DU.name (fromMaybe (view DU.name user) (UUDTO.name dto)) user
-      user'' = set DU.age (fromMaybe (view DU.age user) (UUDTO.age dto)) user'
-      user''' = set DU.email (fromMaybe (view DU.email user) (UUDTO.email dto)) user''
-   in set DU.registrationDate (fromMaybe (view DU.registrationDate user) (UUDTO.registrationDate dto)) user'''
+  let user' = set DU.name (fromMaybe (view DU.name user) (view UUDTO.name dto)) user
+      user'' = set DU.age (fromMaybe (view DU.age user) (view UUDTO.age dto)) user'
+      user''' = set DU.email (fromMaybe (view DU.email user) (view UUDTO.email dto)) user''
+   in set DU.registrationDate (fromMaybe (view DU.registrationDate user) (view UUDTO.registrationDate dto)) user'''
 
 deleteUser' :: ConnectionPool -> Int64 -> IO ()
 deleteUser' pool userId = deleteUser pool (toSqlKey userId)

@@ -2,20 +2,26 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-missing-import-lists #-}
 
 module Dto.UserUpdate where
 
-import Data.Aeson (FromJSON)
+import Control.Lens (makeLenses)
+import Data.Aeson (FromJSON (parseJSON), genericParseJSON)
 import Data.Time (Day)
+import Dto.CustomOptions (customOptions)
 import GHC.Generics (Generic)
 
 data UserUpdateDto = UserUpdateDto
-  { name :: Maybe String,
-    age :: Maybe Int,
-    email :: Maybe String,
-    registrationDate :: Maybe Day
+  { _name :: Maybe String,
+    _age :: Maybe Int,
+    _email :: Maybe String,
+    _registrationDate :: Maybe Day
   }
   deriving (Eq, Show, Generic)
 
-instance FromJSON UserUpdateDto
+instance FromJSON UserUpdateDto where
+  parseJSON = genericParseJSON customOptions
+
+$(makeLenses ''UserUpdateDto)
