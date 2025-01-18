@@ -1,10 +1,11 @@
 module Main where
 
-import Controller.Lib (API, server)
 import Config.DB (doMigration, pgPool)
+import Controller.Lib (API, server)
 import Database.Persist.Sql (ConnectionPool)
+import Network.Wai.Handler.Warp (defaultSettings, runSettings, setLogger, setPort)
+import Network.Wai.Logger (withStdoutLogger)
 import Repository.Schema (migrateAll)
-import Network.Wai.Handler.Warp (run)
 import Servant (Application, Proxy (Proxy), serve)
 
 main :: IO ()
@@ -17,6 +18,6 @@ app1 :: ConnectionPool -> Application
 app1 pool = serve userAPI (server pool)
 
 runServer :: IO ()
-runServer = do
+runServer = withStdoutLogger $ \aplogger -> do
   pool <- pgPool
-  run 8080 (app1 pool)
+  runSettings (setPort 8080 $ setLogger aplogger defaultSettings) (app1 pool)

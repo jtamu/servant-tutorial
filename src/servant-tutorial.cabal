@@ -102,6 +102,7 @@ executable servant-tutorial
     , time
     , transformers
     , wai
+    , wai-logger
     , warp
     , yaml
 
