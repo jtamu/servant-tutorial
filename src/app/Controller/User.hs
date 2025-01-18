@@ -5,12 +5,13 @@ module Controller.User where
 
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.IO.Class (MonadIO (liftIO))
+import Control.Monad.Trans.Maybe (MaybeT (runMaybeT))
 import Data.Int (Int64)
 import Database.Persist.Postgresql (ConnectionPool)
 import Domain.User (User)
 import Dto.User (UserDto)
 import Dto.UserUpdate (UserUpdateDto)
-import Repository.User (createUser', deleteUser', getAllUsers', getUser', updateUser')
+import Repository.User qualified as UserRepository (create, delete, get, getAll, update)
 import Servant (Capture, DeleteNoContent, Get, Handler, JSON, NoContent (NoContent), PostCreated, PutNoContent, ReqBody, Server, err404, (:<|>) ((:<|>)), (:>))
 import Service.User qualified as UserService (update)
 
@@ -25,37 +26,26 @@ type UserAPI =
 
 getUsersAPIHandler :: ConnectionPool -> Handler [User]
 getUsersAPIHandler pool = do
-  liftIO $ getAllUsers' pool
+  liftIO $ UserRepository.getAll pool
 
 createUserAPIHandler :: ConnectionPool -> UserDto -> Handler NoContent
 createUserAPIHandler pool dto = do
-  _ <- liftIO $ createUser' pool dto
+  _ <- liftIO $ UserRepository.create pool dto
   return NoContent
 
 getUserAPIHandler :: ConnectionPool -> Int64 -> Handler User
 getUserAPIHandler pool reqId = do
-  hitUsers <- liftIO $ getUser' pool reqId
-  case hitUsers of
-    Just x -> return x
-    Nothing -> throwError err404
+  hitUsers <- liftIO $ UserRepository.get pool reqId
+  maybe (throwError err404) return hitUsers
 
 updateUserAPIHandler :: ConnectionPool -> Int64 -> UserUpdateDto -> Handler NoContent
 updateUserAPIHandler pool reqId updateData = do
-  maybeUser <- liftIO $ getUser' pool reqId
-  case maybeUser of
-    Just user ->
-      liftIO $ updateUser' pool (UserService.update updateData user)
-    Nothing ->
-      throwError err404
-  return NoContent
+  result <- liftIO $ runMaybeT $ UserService.update (UserRepository.get pool) (UserRepository.update pool) reqId updateData
+  maybe (throwError err404) (const $ return NoContent) result
 
 deleteUserAPIHandler :: ConnectionPool -> Int64 -> Handler NoContent
 deleteUserAPIHandler pool reqId = do
-  -- let hitUsers = ([user | user <- users, userId user == reqId])
-  -- case hitUsers of
-  --   (_ : _) -> return NoContent
-  --   _ -> throwError err404
-  liftIO $ deleteUser' pool reqId
+  liftIO $ UserRepository.delete pool reqId
   return NoContent
 
 userServer :: ConnectionPool -> Server UserAPI
