@@ -15,7 +15,8 @@
 
 module Entity.User where
 
-import Control.Lens (set, view)
+import Control.Lens (modifying, view)
+import Control.Monad.State (execState)
 import Data.Int (Int64)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
@@ -121,12 +122,12 @@ getUser' pool userId = do
 updateUser' :: ConnectionPool -> DU.User -> IO ()
 updateUser' pool user = updateUser pool (mapUserToEntity user)
 
-updateUser'' :: DU.User -> UUDTO.UserUpdateDto -> DU.User
-updateUser'' user dto =
-  let user' = set DU.name (fromMaybe (view DU.name user) (view UUDTO.name dto)) user
-      user'' = set DU.age (fromMaybe (view DU.age user) (view UUDTO.age dto)) user'
-      user''' = set DU.email (fromMaybe (view DU.email user) (view UUDTO.email dto)) user''
-   in set DU.registrationDate (fromMaybe (view DU.registrationDate user) (view UUDTO.registrationDate dto)) user'''
+updateUser'' :: UUDTO.UserUpdateDto -> DU.User -> DU.User
+updateUser'' dto = execState $ do
+  modifying DU.name (\name -> fromMaybe name (view UUDTO.name dto))
+  modifying DU.age (\age -> fromMaybe age (view UUDTO.age dto))
+  modifying DU.email (\email -> fromMaybe email (view UUDTO.email dto))
+  modifying DU.registrationDate (\registrationDate -> fromMaybe registrationDate (view UUDTO.registrationDate dto))
 
 deleteUser' :: ConnectionPool -> Int64 -> IO ()
 deleteUser' pool userId = deleteUser pool (toSqlKey userId)

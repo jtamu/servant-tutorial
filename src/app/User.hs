@@ -43,7 +43,7 @@ updateUserAPIHandler pool reqId updateData = do
   maybeUser <- liftIO $ getUser' pool reqId
   case maybeUser of
     Just user ->
-      liftIO $ updateUser' pool (updateUser'' user updateData)
+      liftIO $ updateUser' pool (updateUser'' updateData user)
     Nothing ->
       throwError err404
   return NoContent
