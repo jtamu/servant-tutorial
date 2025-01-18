@@ -7,10 +7,10 @@
 
 module Dto.UserUpdate where
 
+import Config.Json (customOptions)
 import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON (parseJSON), genericParseJSON)
 import Data.Time (Day)
-import Dto.CustomOptions (customOptions)
 import GHC.Generics (Generic)
 
 data UserUpdateDto = UserUpdateDto

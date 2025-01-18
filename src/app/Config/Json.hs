@@ -1,4 +1,4 @@
-module Dto.CustomOptions where
+module Config.Json where
 
 import Data.Aeson (Options (fieldLabelModifier), defaultOptions)
 

@@ -66,9 +66,9 @@ executable servant-tutorial
   -- Modules included in this executable, other than Main.
   -- cabal-fmt: expand app -Main
   other-modules:
+    Config.Json
     DB
     Domain.User
-    Dto.CustomOptions
     Dto.User
     Dto.UserUpdate
     Entity.User
