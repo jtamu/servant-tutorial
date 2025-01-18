@@ -10,8 +10,9 @@ import Database.Persist.Postgresql (ConnectionPool)
 import Domain.User (User)
 import Dto.User (UserDto)
 import Dto.UserUpdate (UserUpdateDto)
-import Repository.User (createUser', deleteUser', getAllUsers', getUser', updateUser', updateUser'')
+import Repository.User (createUser', deleteUser', getAllUsers', getUser', updateUser')
 import Servant (Capture, DeleteNoContent, Get, Handler, JSON, NoContent (NoContent), PostCreated, PutNoContent, ReqBody, Server, err404, (:<|>) ((:<|>)), (:>))
+import Service.User qualified as UserService (update)
 
 type UserAPI =
   Get '[JSON] [User]
@@ -43,7 +44,7 @@ updateUserAPIHandler pool reqId updateData = do
   maybeUser <- liftIO $ getUser' pool reqId
   case maybeUser of
     Just user ->
-      liftIO $ updateUser' pool (updateUser'' updateData user)
+      liftIO $ updateUser' pool (UserService.update updateData user)
     Nothing ->
       throwError err404
   return NoContent

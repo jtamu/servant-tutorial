@@ -75,6 +75,7 @@ executable servant-tutorial
     Dto.UserUpdate
     Repository.Schema
     Repository.User
+    Service.User
 
   -- LANGUAGE extensions used by modules in this package.
   other-extensions: TemplateHaskell

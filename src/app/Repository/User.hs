@@ -2,10 +2,7 @@
 
 module Repository.User where
 
-import Control.Lens (modifying)
-import Control.Monad.State (execState)
 import Data.Int (Int64)
-import Data.Maybe (fromMaybe)
 import Database.Persist
   ( Entity (Entity),
     PersistStoreWrite (delete, insert, replace),
@@ -20,7 +17,6 @@ import Database.Persist.Sql
   )
 import Domain.User qualified as Domain
 import Dto.User (UserDto (_age, _email, _name, _registrationDate))
-import Dto.UserUpdate (UserUpdateDto (_age, _email, _name, _registrationDate))
 import Repository.Schema (User (User, _userAge, _userEmail, _userName, _userRegistrationDate), UserId)
 
 createUser :: ConnectionPool -> User -> IO UserId
@@ -83,13 +79,6 @@ getUser' pool userId = do
 
 updateUser' :: ConnectionPool -> Domain.User -> IO ()
 updateUser' pool user = updateUser pool (mapUserToEntity user)
-
-updateUser'' :: UserUpdateDto -> Domain.User -> Domain.User
-updateUser'' dto = execState $ do
-  modifying Domain.name (\n -> fromMaybe n dto._name)
-  modifying Domain.age (\a -> fromMaybe a dto._age)
-  modifying Domain.email (\e -> fromMaybe e dto._email)
-  modifying Domain.registrationDate (\r -> fromMaybe r dto._registrationDate)
 
 deleteUser' :: ConnectionPool -> Int64 -> IO ()
 deleteUser' pool userId = deleteUser pool (toSqlKey userId)
