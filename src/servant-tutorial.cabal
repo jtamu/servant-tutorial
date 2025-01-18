@@ -67,14 +67,14 @@ executable servant-tutorial
   -- cabal-fmt: expand app -Main
   other-modules:
     Config.Json
+    Controller.Lib
+    Controller.User
     DB
     Domain.User
     Dto.User
     Dto.UserUpdate
     Entity.User
-    Lib
     Repository.User
-    User
 
   -- LANGUAGE extensions used by modules in this package.
   other-extensions: TemplateHaskell

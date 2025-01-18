@@ -2,18 +2,15 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Lib where
+module Controller.Lib where
 
 import Control.Monad.IO.Class (MonadIO (liftIO))
-import DB (pgPool)
+import Controller.User (UserAPI, userServer)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.List (intercalate)
 import Database.Persist.Postgresql (ConnectionPool)
 import GHC.Generics (Generic)
-import Network.Wai (Application)
-import Network.Wai.Handler.Warp (run)
-import Servant (Capture, Get, Handler, JSON, Post, Proxy (Proxy), QueryParam, ReqBody, Server, serve, (:<|>) ((:<|>)), (:>))
-import User (UserAPI, userServer)
+import Servant (Capture, Get, Handler, JSON, Post, QueryParam, ReqBody, Server, (:<|>) ((:<|>)), (:>))
 
 data Position = Position
   { xCoord :: Int,
@@ -96,14 +93,3 @@ server pool =
     :<|> helloMessageAPIHandler
     :<|> marketingAPIHandler
     :<|> fileContentHandler
-
-userAPI :: Proxy API
-userAPI = Proxy
-
-app1 :: ConnectionPool -> Application
-app1 pool = serve userAPI (server pool)
-
-runServer :: IO ()
-runServer = do
-  pool <- pgPool
-  run 8080 (app1 pool)
