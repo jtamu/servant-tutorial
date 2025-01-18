@@ -15,7 +15,7 @@
 
 module Entity.User where
 
-import Control.Lens (view)
+import Control.Lens (set, view)
 import Data.Int (Int64)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
@@ -78,23 +78,23 @@ deleteUser pool userId = runSqlPool (delete userId) pool
 mapUserToDomain :: Entity User -> DU.User
 mapUserToDomain (Entity userId user) =
   DU.User
-    { DU.userId = fromSqlKey userId,
-      DU.name = view userName user,
-      DU.age = view userAge user,
-      DU.email = view userEmail user,
-      DU.registrationDate = view userRegistrationDate user
+    { DU._userId = fromSqlKey userId,
+      DU._name = view userName user,
+      DU._age = view userAge user,
+      DU._email = view userEmail user,
+      DU._registrationDate = view userRegistrationDate user
     }
 
 mapUserToEntity :: DU.User -> Entity User
 mapUserToEntity user =
   let record =
         User
-          { _userName = DU.name user,
-            _userAge = DU.age user,
-            _userEmail = DU.email user,
-            _userRegistrationDate = DU.registrationDate user
+          { _userName = view DU.name user,
+            _userAge = view DU.age user,
+            _userEmail = view DU.email user,
+            _userRegistrationDate = view DU.registrationDate user
           }
-   in Entity (toSqlKey (DU.userId user)) record
+   in Entity (toSqlKey (view DU.userId user)) record
 
 mapDtoToUser :: DTO.UserDto -> User
 mapDtoToUser user =
@@ -123,12 +123,10 @@ updateUser' pool user = updateUser pool (mapUserToEntity user)
 
 updateUser'' :: DU.User -> UUDTO.UserUpdateDto -> DU.User
 updateUser'' user dto =
-  user
-    { DU.name = fromMaybe (DU.name user) (UUDTO.name dto),
-      DU.age = fromMaybe (DU.age user) (UUDTO.age dto),
-      DU.email = fromMaybe (DU.email user) (UUDTO.email dto),
-      DU.registrationDate = fromMaybe (DU.registrationDate user) (UUDTO.registrationDate dto)
-    }
+  let user' = set DU.name (fromMaybe (view DU.name user) (UUDTO.name dto)) user
+      user'' = set DU.age (fromMaybe (view DU.age user) (UUDTO.age dto)) user'
+      user''' = set DU.email (fromMaybe (view DU.email user) (UUDTO.email dto)) user''
+   in set DU.registrationDate (fromMaybe (view DU.registrationDate user) (UUDTO.registrationDate dto)) user'''
 
 deleteUser' :: ConnectionPool -> Int64 -> IO ()
 deleteUser' pool userId = deleteUser pool (toSqlKey userId)
