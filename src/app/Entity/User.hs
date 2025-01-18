@@ -99,10 +99,10 @@ mapUserToEntity user =
 mapDtoToUser :: DTO.UserDto -> User
 mapDtoToUser user =
   User
-    { _userName = DTO.name user,
-      _userAge = DTO.age user,
-      _userEmail = DTO.email user,
-      _userRegistrationDate = DTO.registrationDate user
+    { _userName = view DTO.name user,
+      _userAge = view DTO.age user,
+      _userEmail = view DTO.email user,
+      _userRegistrationDate = view DTO.registrationDate user
     }
 
 createUser' :: ConnectionPool -> DTO.UserDto -> IO UserId

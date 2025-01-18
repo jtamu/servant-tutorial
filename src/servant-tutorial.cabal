@@ -68,6 +68,7 @@ executable servant-tutorial
   other-modules:
     DB
     Domain.User
+    Dto.CustomOptions
     Dto.User
     Dto.UserUpdate
     Entity.User

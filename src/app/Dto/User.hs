@@ -8,20 +8,22 @@
 
 module Dto.User where
 
-import Data.Aeson (FromJSON)
+import Control.Lens (makeLenses)
+import Data.Aeson (FromJSON (parseJSON), genericParseJSON)
 import Data.Time (Day)
-import Database.HDBC.Query.TH (makeRelationalRecord)
+import Dto.CustomOptions (customOptions)
 import GHC.Generics (Generic)
 import Prelude hiding (id)
 
 data UserDto = UserDto
-  { name :: String,
-    age :: Int,
-    email :: String,
-    registrationDate :: Day
+  { _name :: String,
+    _age :: Int,
+    _email :: String,
+    _registrationDate :: Day
   }
   deriving (Eq, Show, Generic)
 
-instance FromJSON UserDto
+instance FromJSON UserDto where
+  parseJSON = genericParseJSON customOptions
 
-$(makeRelationalRecord ''UserDto)
+$(makeLenses ''UserDto)
