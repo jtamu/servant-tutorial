@@ -1,7 +1,7 @@
 module Main where
 
 import Controller.Lib (API, server)
-import DB (doMigration, pgPool)
+import Config.DB (doMigration, pgPool)
 import Database.Persist.Sql (ConnectionPool)
 import Entity.User (migrateAll)
 import Network.Wai.Handler.Warp (run)

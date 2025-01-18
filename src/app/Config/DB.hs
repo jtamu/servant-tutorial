@@ -1,4 +1,4 @@
-module DB where
+module Config.DB where
 
 import Control.Monad.Logger (runStdoutLoggingT)
 import Control.Monad.Trans.Reader (runReaderT)
