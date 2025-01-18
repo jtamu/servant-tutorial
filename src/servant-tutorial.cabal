@@ -73,7 +73,7 @@ executable servant-tutorial
     Domain.User
     Dto.User
     Dto.UserUpdate
-    Entity.User
+    Repository.Schema
     Repository.User
 
   -- LANGUAGE extensions used by modules in this package.

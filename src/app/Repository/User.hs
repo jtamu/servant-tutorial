@@ -21,7 +21,7 @@ import Database.Persist.Sql
 import Domain.User qualified as Domain
 import Dto.User (UserDto (_age, _email, _name, _registrationDate))
 import Dto.UserUpdate (UserUpdateDto (_age, _email, _name, _registrationDate))
-import Entity.User (User (User, _userAge, _userEmail, _userName, _userRegistrationDate), UserId)
+import Repository.Schema (User (User, _userAge, _userEmail, _userName, _userRegistrationDate), UserId)
 
 createUser :: ConnectionPool -> User -> IO UserId
 createUser pool inserts = runSqlPool (insert inserts) pool

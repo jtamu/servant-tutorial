@@ -3,7 +3,7 @@ module Main where
 import Controller.Lib (API, server)
 import Config.DB (doMigration, pgPool)
 import Database.Persist.Sql (ConnectionPool)
-import Entity.User (migrateAll)
+import Repository.Schema (migrateAll)
 import Network.Wai.Handler.Warp (run)
 import Servant (Application, Proxy (Proxy), serve)
 

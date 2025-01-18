@@ -13,7 +13,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Entity.User where
+module Repository.Schema where
 
 import Data.Text (Text)
 import Data.Time.Calendar (Day)
