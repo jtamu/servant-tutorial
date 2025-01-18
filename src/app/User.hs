@@ -10,7 +10,7 @@ import Database.Persist.Postgresql (ConnectionPool)
 import Domain.User (User)
 import Dto.User (UserDto)
 import Dto.UserUpdate (UserUpdateDto)
-import Entity.User (createUser', deleteUser', getAllUsers', getUser', updateUser', updateUser'')
+import Repository.User (createUser', deleteUser', getAllUsers', getUser', updateUser', updateUser'')
 import Servant (Capture, DeleteNoContent, Get, Handler, JSON, NoContent (NoContent), PostCreated, PutNoContent, ReqBody, Server, err404, (:<|>) ((:<|>)), (:>))
 
 type UserAPI =
