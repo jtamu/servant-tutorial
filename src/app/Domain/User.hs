@@ -3,9 +3,10 @@
 module Domain.User where
 
 import Control.Lens.TH (makeLenses)
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (ToJSON (toJSON), genericToJSON)
 import Data.Int (Int64)
 import Data.Time.Calendar (Day)
+import Dto.CustomOptions (customOptions)
 import GHC.Generics (Generic)
 
 data User = User
@@ -17,8 +18,7 @@ data User = User
   }
   deriving (Eq, Show, Generic)
 
-instance ToJSON User
-
-instance FromJSON User
+instance ToJSON User where
+  toJSON = genericToJSON customOptions
 
 $(makeLenses ''User)
