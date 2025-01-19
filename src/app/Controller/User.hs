@@ -1,13 +1,16 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Controller.User where
 
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.IO.Class (MonadIO (liftIO))
-import Control.Monad.Logger (LoggingT)
+import Control.Monad.Logger (LoggingT, logInfo)
 import Control.Monad.Trans.Maybe (MaybeT (runMaybeT))
 import Data.Int (Int64)
+import Data.Text (append, pack)
 import Database.Persist.Postgresql (ConnectionPool)
 import Domain.User (User)
 import Dto.User (UserDto)
@@ -37,12 +40,20 @@ createUserAPIHandler pool dto = do
 getUserAPIHandler :: ConnectionPool -> Int64 -> LoggingT Handler User
 getUserAPIHandler pool reqId = do
   hitUsers <- liftIO $ UserRepository.get pool reqId
-  maybe (throwError err404) return hitUsers
+  case hitUsers of
+    (Just user) -> return user
+    Nothing -> do
+      $logInfo $ "リクエストされたユーザは存在しませんでした userId: " `append` pack (show reqId)
+      throwError err404
 
 updateUserAPIHandler :: ConnectionPool -> Int64 -> UserUpdateDto -> LoggingT Handler NoContent
 updateUserAPIHandler pool reqId updateData = do
   result <- liftIO $ runMaybeT $ UserService.update (UserRepository.get pool) (UserRepository.update pool) reqId updateData
-  maybe (throwError err404) (const $ return NoContent) result
+  case result of
+    (Just _) -> return NoContent
+    Nothing -> do
+      $logInfo $ "リクエストされたユーザは存在しませんでした userId: " `append` pack (show reqId)
+      throwError err404
 
 deleteUserAPIHandler :: ConnectionPool -> Int64 -> LoggingT Handler NoContent
 deleteUserAPIHandler pool reqId = do
