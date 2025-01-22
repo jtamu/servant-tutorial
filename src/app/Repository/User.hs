@@ -2,7 +2,10 @@
 
 module Repository.User where
 
+import Data.Aeson (ToJSON)
+import Data.Either.Validation (Validation (Failure, Success))
 import Data.Int (Int64)
+import Data.Map qualified as M (Map, fromList)
 import Database.Persist
   ( Entity (Entity),
     getEntity,
@@ -17,6 +20,7 @@ import Database.Persist.Sql
   )
 import Domain.User qualified as Domain
 import Dto.User (UserDto (_age, _email, _name, _registrationDate))
+import GHC.Generics (Generic)
 import Repository.Schema (User (User, _userAge, _userEmail, _userName, _userRegistrationDate), UserId)
 
 createUser :: ConnectionPool -> User -> IO UserId
@@ -55,17 +59,26 @@ mapUserToEntity user =
           }
    in Entity (toSqlKey user._userId) record
 
-mapDtoToUser :: UserDto -> User
-mapDtoToUser user =
-  User
-    { _userName = user._name,
-      _userAge = user._age,
-      _userEmail = user._email,
-      _userRegistrationDate = user._registrationDate
-    }
+newtype ValidationError = ValidationError (M.Map String [String]) deriving (Show, Generic)
 
-create :: ConnectionPool -> UserDto -> IO UserId
-create pool dto = createUser pool (mapDtoToUser dto)
+instance ToJSON ValidationError
+
+instance Semigroup ValidationError where
+  (ValidationError m1) <> (ValidationError m2) = ValidationError $ m1 <> m2
+
+mapDtoToUser :: UserDto -> Validation ValidationError User
+mapDtoToUser user = User <$> validateExistence "name" user._name <*> validateExistence "age" user._age <*> validateExistence "email" user._email <*> validateExistence "registration_date" user._registrationDate
+
+validateExistence :: String -> Maybe a -> Validation ValidationError a
+validateExistence _ (Just x) = Success x
+validateExistence colName Nothing = Failure $ ValidationError $ M.fromList [(colName, ["必須の項目です"])]
+
+create :: ConnectionPool -> UserDto -> IO (Either ValidationError UserId)
+create pool dto = do
+  let maybeUser = mapDtoToUser dto
+  case maybeUser of
+    (Success user) -> Right <$> createUser pool user
+    Failure e -> return $ Left e
 
 getAll :: ConnectionPool -> IO [Domain.User]
 getAll pool = do

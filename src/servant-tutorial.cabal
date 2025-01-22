@@ -71,6 +71,7 @@ executable servant-tutorial
     Controller.Lib
     Controller.User
     Domain.User
+    Dto.ErrorResponse
     Dto.User
     Dto.UserUpdate
     Repository.Schema
@@ -84,6 +85,8 @@ executable servant-tutorial
   build-depends:
     , aeson
     , base                   ^>=4.18.2.1
+    , containers
+    , either
     , HDBC
     , HDBC-postgresql
     , http-types
@@ -101,6 +104,7 @@ executable servant-tutorial
     , text
     , time
     , transformers
+    , unicode-show
     , wai
     , wai-logger
     , warp
