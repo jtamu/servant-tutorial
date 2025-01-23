@@ -13,11 +13,10 @@ import Data.Aeson (encode)
 import Data.Either.Validation (Validation (Failure, Success))
 import Data.Int (Int64)
 import Data.Text (append, pack)
-import Database.Persist.Postgresql (ConnectionPool)
 import Domain.User (User)
 import Dto.User (UserDto)
 import Dto.UserUpdate (UserUpdateDto)
-import Repository.User qualified as UserRepository (create, delete, get, getAll, update)
+import Repository.User (UserRepository, create, delete, get, getAll, update)
 import Servant (Capture, DeleteNoContent, Get, Handler, HasServer (ServerT), JSON, NoContent (NoContent), PostCreated, PutNoContent, ReqBody, ServerError (errBody), err400, err404, (:<|>) ((:<|>)), (:>))
 import Service.User qualified as UserService (update)
 
@@ -30,45 +29,45 @@ type UserAPI =
              :<|> DeleteNoContent
          )
 
-getUsersAPIHandler :: ConnectionPool -> LoggingT Handler [User]
-getUsersAPIHandler pool = do
-  liftIO $ UserRepository.getAll pool
+getUsersAPIHandler :: UserRepository -> LoggingT Handler [User]
+getUsersAPIHandler r = do
+  liftIO $ getAll r
 
-createUserAPIHandler :: ConnectionPool -> UserDto -> LoggingT Handler NoContent
-createUserAPIHandler pool dto = do
-  uid <- liftIO $ UserRepository.create pool dto
+createUserAPIHandler :: UserRepository -> UserDto -> LoggingT Handler NoContent
+createUserAPIHandler pool r = do
+  uid <- liftIO $ create pool r
   case uid of
     (Success _) -> return NoContent
     (Failure e) -> throwError err400 {errBody = encode e}
 
-getUserAPIHandler :: ConnectionPool -> Int64 -> LoggingT Handler User
-getUserAPIHandler pool reqId = do
-  hitUsers <- liftIO $ UserRepository.get pool reqId
+getUserAPIHandler :: UserRepository -> Int64 -> LoggingT Handler User
+getUserAPIHandler r reqId = do
+  hitUsers <- liftIO $ get r reqId
   case hitUsers of
     (Just user) -> return user
     Nothing -> do
       $logInfo $ "リクエストされたユーザは存在しませんでした userId: " `append` pack (show reqId)
       throwError err404
 
-updateUserAPIHandler :: ConnectionPool -> Int64 -> UserUpdateDto -> LoggingT Handler NoContent
-updateUserAPIHandler pool reqId updateData = do
-  result <- liftIO $ runMaybeT $ UserService.update (UserRepository.get pool) (UserRepository.update pool) reqId updateData
+updateUserAPIHandler :: UserRepository -> Int64 -> UserUpdateDto -> LoggingT Handler NoContent
+updateUserAPIHandler r reqId updateData = do
+  result <- liftIO $ runMaybeT $ UserService.update (get r) (update r) reqId updateData
   case result of
     (Just _) -> return NoContent
     Nothing -> do
       $logInfo $ "リクエストされたユーザは存在しませんでした userId: " `append` pack (show reqId)
       throwError err404
 
-deleteUserAPIHandler :: ConnectionPool -> Int64 -> LoggingT Handler NoContent
-deleteUserAPIHandler pool reqId = do
-  liftIO $ UserRepository.delete pool reqId
+deleteUserAPIHandler :: UserRepository -> Int64 -> LoggingT Handler NoContent
+deleteUserAPIHandler r reqId = do
+  liftIO $ delete r reqId
   return NoContent
 
-userServer :: ConnectionPool -> ServerT UserAPI (LoggingT Handler)
-userServer pool = do
-  getUsersAPIHandler pool
-    :<|> createUserAPIHandler pool
+userServer :: UserRepository -> ServerT UserAPI (LoggingT Handler)
+userServer r = do
+  getUsersAPIHandler r
+    :<|> createUserAPIHandler r
     :<|> \reqId ->
-      getUserAPIHandler pool reqId
-        :<|> updateUserAPIHandler pool reqId
-        :<|> deleteUserAPIHandler pool reqId
+      getUserAPIHandler r reqId
+        :<|> updateUserAPIHandler r reqId
+        :<|> deleteUserAPIHandler r reqId
