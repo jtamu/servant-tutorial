@@ -10,6 +10,7 @@ import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Logger (LoggingT, logInfo)
 import Control.Monad.Trans.Maybe (MaybeT (runMaybeT))
 import Data.Aeson (encode)
+import Data.Either.Validation (Validation (Failure, Success))
 import Data.Int (Int64)
 import Data.Text (append, pack)
 import Database.Persist.Postgresql (ConnectionPool)
@@ -37,8 +38,8 @@ createUserAPIHandler :: ConnectionPool -> UserDto -> LoggingT Handler NoContent
 createUserAPIHandler pool dto = do
   uid <- liftIO $ UserRepository.create pool dto
   case uid of
-    (Right _) -> return NoContent
-    (Left e) -> throwError err400 {errBody = encode e}
+    (Success _) -> return NoContent
+    (Failure e) -> throwError err400 {errBody = encode e}
 
 getUserAPIHandler :: ConnectionPool -> Int64 -> LoggingT Handler User
 getUserAPIHandler pool reqId = do

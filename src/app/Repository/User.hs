@@ -73,12 +73,8 @@ validateExistence :: String -> Maybe a -> Validation ValidationError a
 validateExistence _ (Just x) = Success x
 validateExistence colName Nothing = Failure $ ValidationError $ M.fromList [(colName, ["必須の項目です"])]
 
-create :: ConnectionPool -> UserDto -> IO (Either ValidationError UserId)
-create pool dto = do
-  let maybeUser = mapDtoToUser dto
-  case maybeUser of
-    (Success user) -> Right <$> createUser pool user
-    Failure e -> return $ Left e
+create :: ConnectionPool -> UserDto -> IO (Validation ValidationError UserId)
+create pool dto = mapM (createUser pool) (mapDtoToUser dto)
 
 getAll :: ConnectionPool -> IO [Domain.User]
 getAll pool = do
