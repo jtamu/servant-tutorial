@@ -9,11 +9,13 @@ import Data.Int (Int64)
 import Data.Maybe (fromMaybe)
 import Domain.User qualified as Domain
 import Dto.UserUpdate (UserUpdateDto (_age, _email, _name, _registrationDate))
+import Repository.User (IUserRepository (get))
+import Repository.User qualified as R (update)
 
-update :: (Int64 -> IO (Maybe Domain.User)) -> (Domain.User -> IO ()) -> Int64 -> UserUpdateDto -> MaybeT IO ()
-update getfn updatefn uid dto = do
-  user <- MaybeT $ getfn uid
-  lift $ updatefn $ _update dto user
+update :: (IUserRepository r) => r -> Int64 -> UserUpdateDto -> MaybeT IO ()
+update r uid dto = do
+  user <- MaybeT $ get r uid
+  lift $ R.update r (_update dto user)
 
 _update :: UserUpdateDto -> Domain.User -> Domain.User
 _update dto = execState $ do

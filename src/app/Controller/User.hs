@@ -16,7 +16,7 @@ import Data.Text (append, pack)
 import Domain.User (User)
 import Dto.User (UserDto)
 import Dto.UserUpdate (UserUpdateDto)
-import Repository.User (UserRepository, create, delete, get, getAll, update)
+import Repository.User (UserRepository, create, delete, get, getAll)
 import Servant (Capture, DeleteNoContent, Get, Handler, HasServer (ServerT), JSON, NoContent (NoContent), PostCreated, PutNoContent, ReqBody, ServerError (errBody), err400, err404, (:<|>) ((:<|>)), (:>))
 import Service.User qualified as UserService (update)
 
@@ -51,7 +51,7 @@ getUserAPIHandler r reqId = do
 
 updateUserAPIHandler :: UserRepository -> Int64 -> UserUpdateDto -> LoggingT Handler NoContent
 updateUserAPIHandler r reqId updateData = do
-  result <- liftIO $ runMaybeT $ UserService.update (get r) (update r) reqId updateData
+  result <- liftIO $ runMaybeT $ UserService.update r reqId updateData
   case result of
     (Just _) -> return NoContent
     Nothing -> do
