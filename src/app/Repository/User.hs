@@ -73,26 +73,24 @@ validateExistence :: String -> Maybe a -> Validation ValidationError a
 validateExistence _ (Just x) = Success x
 validateExistence colName Nothing = Failure $ ValidationError $ M.fromList [(colName, ["必須の項目です"])]
 
-class IUserRepository r where
-  create :: r -> UserDto -> IO (Validation ValidationError UserId)
-  getAll :: r -> IO [Domain.User]
-  get :: r -> Int64 -> IO (Maybe Domain.User)
-  update :: r -> Domain.User -> IO ()
-  delete :: r -> Int64 -> IO ()
+data UserRepository = UserRepository
+  { create :: UserDto -> IO (Validation ValidationError UserId),
+    getAll :: IO [Domain.User],
+    get :: Int64 -> IO (Maybe Domain.User),
+    update :: Domain.User -> IO (),
+    delete :: Int64 -> IO ()
+  }
 
-newtype UserRepository = UserRepository ConnectionPool
-
-instance IUserRepository UserRepository where
-  create (UserRepository pool) dto = mapM (createUser pool) (mapDtoToUser dto)
-
-  getAll (UserRepository pool) = do
-    users <- getAllUsers pool
-    return $ map mapUserToDomain users
-
-  get (UserRepository pool) userId = do
-    user <- getUser pool (toSqlKey userId)
-    return $ fmap mapUserToDomain user
-
-  update (UserRepository pool) user = updateUser pool (mapUserToEntity user)
-
-  delete (UserRepository pool) userId = deleteUser pool (toSqlKey userId)
+userRepository :: ConnectionPool -> UserRepository
+userRepository pool =
+  UserRepository
+    { create = mapM (createUser pool) . mapDtoToUser,
+      getAll = do
+        users <- getAllUsers pool
+        return $ map mapUserToDomain users,
+      get = \userId -> do
+        maybeUser <- getUser pool (toSqlKey userId)
+        return $ fmap mapUserToDomain maybeUser,
+      update = updateUser pool . mapUserToEntity,
+      delete = deleteUser pool . toSqlKey
+    }

@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
@@ -31,18 +32,18 @@ type UserAPI =
 
 getUsersAPIHandler :: UserRepository -> LoggingT Handler [User]
 getUsersAPIHandler r = do
-  liftIO $ getAll r
+  liftIO r.getAll
 
 createUserAPIHandler :: UserRepository -> UserDto -> LoggingT Handler NoContent
-createUserAPIHandler pool r = do
-  uid <- liftIO $ create pool r
+createUserAPIHandler r dto = do
+  uid <- liftIO $ r.create dto
   case uid of
     (Success _) -> return NoContent
     (Failure e) -> throwError err400 {errBody = encode e}
 
 getUserAPIHandler :: UserRepository -> Int64 -> LoggingT Handler User
 getUserAPIHandler r reqId = do
-  hitUsers <- liftIO $ get r reqId
+  hitUsers <- liftIO $ r.get reqId
   case hitUsers of
     (Just user) -> return user
     Nothing -> do

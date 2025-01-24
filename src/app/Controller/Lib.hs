@@ -11,7 +11,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.List (intercalate)
 import Database.Persist.Postgresql (ConnectionPool)
 import GHC.Generics (Generic)
-import Repository.User (UserRepository (UserRepository))
+import Repository.User (userRepository)
 import Servant (Capture, Get, Handler, HasServer (ServerT), JSON, Post, QueryParam, ReqBody, (:<|>) ((:<|>)), (:>))
 
 data Position = Position
@@ -90,7 +90,7 @@ type API =
 
 server :: ConnectionPool -> ServerT API (LoggingT Handler)
 server pool =
-  userServer (UserRepository pool)
+  userServer (userRepository pool)
     :<|> positionAPIHandler
     :<|> helloMessageAPIHandler
     :<|> marketingAPIHandler
