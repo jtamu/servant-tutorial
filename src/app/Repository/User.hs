@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedRecordDot #-}
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
 module Repository.User where
 
-import Data.Aeson (ToJSON)
-import Data.Either.Validation (Validation (Failure, Success))
 import Data.Int (Int64)
-import Data.Map qualified as M (Map, fromList)
+import Data.Map qualified as M (fromList)
+import Data.Validation (Validation (Failure, Success), orElse)
 import Database.Persist
   ( Entity (Entity),
     getEntity,
@@ -20,7 +20,7 @@ import Database.Persist.Sql
   )
 import Domain.User qualified as Domain
 import Dto.User (UserDto (_age, _email, _name, _registrationDate))
-import GHC.Generics (Generic)
+import Dto.ValidationError (ValidationError (ValidationError))
 import Repository.Schema (User (User, _userAge, _userEmail, _userName, _userRegistrationDate), UserId)
 
 createUser :: ConnectionPool -> User -> IO UserId
@@ -43,28 +43,22 @@ mapUserToDomain (Entity userId user) =
   Domain.User
     { Domain._userId = fromSqlKey userId,
       Domain._name = user._userName,
-      Domain._age = user._userAge,
+      Domain._age = Domain.makeAge user._userAge `orElse` Domain.defaultAge,
       Domain._email = user._userEmail,
       Domain._registrationDate = user._userRegistrationDate
     }
 
 mapUserToEntity :: Domain.User -> Entity User
 mapUserToEntity user =
-  let record =
+  let (Domain.Age age) = user._age
+      record =
         User
           { _userName = user._name,
-            _userAge = user._age,
+            _userAge = age,
             _userEmail = user._email,
             _userRegistrationDate = user._registrationDate
           }
    in Entity (toSqlKey user._userId) record
-
-newtype ValidationError = ValidationError (M.Map String [String]) deriving (Show, Generic)
-
-instance ToJSON ValidationError
-
-instance Semigroup ValidationError where
-  (ValidationError m1) <> (ValidationError m2) = ValidationError $ m1 <> m2
 
 mapDtoToUser :: UserDto -> Validation ValidationError User
 mapDtoToUser user = User <$> validateExistence "name" user._name <*> validateExistence "age" user._age <*> validateExistence "email" user._email <*> validateExistence "registration_date" user._registrationDate

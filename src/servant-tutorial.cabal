@@ -74,6 +74,7 @@ executable servant-tutorial
     Dto.ErrorResponse
     Dto.User
     Dto.UserUpdate
+    Dto.ValidationError
     Repository.Schema
     Repository.User
     Service.User
@@ -105,6 +106,7 @@ executable servant-tutorial
     , time
     , transformers
     , unicode-show
+    , validation
     , wai
     , wai-logger
     , warp
