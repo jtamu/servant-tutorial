@@ -22,7 +22,7 @@ update r uid dto = do
     (Just user) ->
       mapM r.update (_update dto user)
 
-_update :: UserUpdateDto -> Domain.User -> Validation ValidationError Domain.User
+_update :: UserUpdateDto -> Domain.RegisteredUser -> Validation ValidationError Domain.RegisteredUser
 _update dto user =
   let vAge = case dto._age of
         (Just a) -> Domain.makeAge a

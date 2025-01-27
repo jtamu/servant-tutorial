@@ -6,7 +6,12 @@ module Domain.User
     makeAge,
     pattern Age,
     defaultAge,
-    User (User, _userId, _name, _age, _email, _registrationDate),
+    RegisteredUser (RegisteredUser, _userId, _name, _age, _email, _registrationDate),
+    UnregisteredUser (UnregisteredUser, _uname, _uage, _uemail, _uregistrationDate),
+    uname,
+    uage,
+    uemail,
+    uregistrationDate,
     userId,
     name,
     age,
@@ -39,7 +44,20 @@ pattern Age n <- Age_ n
 defaultAge :: Age
 defaultAge = Age_ 0
 
-data User = User
+data UnregisteredUser = UnregisteredUser
+  { _uname :: String,
+    _uage :: Age,
+    _uemail :: String,
+    _uregistrationDate :: Day
+  }
+  deriving (Eq, Show, Generic)
+
+instance ToJSON UnregisteredUser where
+  toJSON = genericToJSON customOptions
+
+$(makeLenses ''UnregisteredUser)
+
+data RegisteredUser = RegisteredUser
   { _userId :: Int64,
     _name :: String,
     _age :: Age,
@@ -48,7 +66,7 @@ data User = User
   }
   deriving (Eq, Show, Generic)
 
-instance ToJSON User where
+instance ToJSON RegisteredUser where
   toJSON = genericToJSON customOptions
 
-$(makeLenses ''User)
+$(makeLenses ''RegisteredUser)

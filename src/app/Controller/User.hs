@@ -13,34 +13,34 @@ import Data.Aeson (encode)
 import Data.Int (Int64)
 import Data.Text (append, pack)
 import Data.Validation (Validation (Failure, Success))
-import Domain.User (User)
+import Domain.User (RegisteredUser)
 import Dto.User (UserDto)
 import Dto.UserUpdate (UserUpdateDto)
-import Repository.User (UserRepository, create, delete, get, getAll)
+import Repository.User (UserRepository, create, delete, get, getAll, mapDtoToDomain)
 import Servant (Capture, DeleteNoContent, Get, Handler, HasServer (ServerT), JSON, NoContent (NoContent), PostCreated, PutNoContent, ReqBody, ServerError (errBody), err400, err404, (:<|>) ((:<|>)), (:>))
 import Service.User qualified as UserService (update)
 
 type UserAPI =
-  Get '[JSON] [User]
+  Get '[JSON] [RegisteredUser]
     :<|> ReqBody '[JSON] UserDto :> PostCreated '[JSON] NoContent
     :<|> Capture "userId" Int64
-      :> ( Get '[JSON] User
+      :> ( Get '[JSON] RegisteredUser
              :<|> ReqBody '[JSON] UserUpdateDto :> PutNoContent
              :<|> DeleteNoContent
          )
 
-getUsersAPIHandler :: UserRepository -> LoggingT Handler [User]
+getUsersAPIHandler :: UserRepository -> LoggingT Handler [RegisteredUser]
 getUsersAPIHandler r = do
   liftIO r.getAll
 
 createUserAPIHandler :: UserRepository -> UserDto -> LoggingT Handler NoContent
 createUserAPIHandler r dto = do
-  uid <- liftIO $ r.create dto
+  uid <- liftIO $ mapM r.create (mapDtoToDomain dto)
   case uid of
     (Success _) -> return NoContent
     (Failure e) -> throwError err400 {errBody = encode e}
 
-getUserAPIHandler :: UserRepository -> Int64 -> LoggingT Handler User
+getUserAPIHandler :: UserRepository -> Int64 -> LoggingT Handler RegisteredUser
 getUserAPIHandler r reqId = do
   hitUsers <- liftIO $ r.get reqId
   case hitUsers of

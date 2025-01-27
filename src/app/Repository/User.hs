@@ -5,7 +5,7 @@ module Repository.User where
 
 import Data.Int (Int64)
 import Data.Map qualified as M (fromList)
-import Data.Validation (Validation (Failure, Success), orElse)
+import Data.Validation (Validation (Failure, Success), bindValidation, orElse)
 import Database.Persist
   ( Entity (Entity),
     getEntity,
@@ -18,6 +18,7 @@ import Database.Persist.Sql
     runSqlPool,
     toSqlKey,
   )
+import Domain.User (UnregisteredUser (UnregisteredUser))
 import Domain.User qualified as Domain
 import Dto.User (UserDto (_age, _email, _name, _registrationDate))
 import Dto.ValidationError (ValidationError (ValidationError))
@@ -38,9 +39,9 @@ updateUser pool (Entity userId user) = runSqlPool (P.replace userId user) pool
 deleteUser :: ConnectionPool -> UserId -> IO ()
 deleteUser pool userId = runSqlPool (P.delete userId) pool
 
-mapUserToDomain :: Entity User -> Domain.User
+mapUserToDomain :: Entity User -> Domain.RegisteredUser
 mapUserToDomain (Entity userId user) =
-  Domain.User
+  Domain.RegisteredUser
     { Domain._userId = fromSqlKey userId,
       Domain._name = user._userName,
       Domain._age = Domain.makeAge user._userAge `orElse` Domain.defaultAge,
@@ -48,7 +49,7 @@ mapUserToDomain (Entity userId user) =
       Domain._registrationDate = user._userRegistrationDate
     }
 
-mapUserToEntity :: Domain.User -> Entity User
+mapUserToEntity :: Domain.RegisteredUser -> Entity User
 mapUserToEntity user =
   let (Domain.Age age) = user._age
       record =
@@ -60,6 +61,20 @@ mapUserToEntity user =
           }
    in Entity (toSqlKey user._userId) record
 
+mapUnregisteredUser :: Domain.UnregisteredUser -> User
+mapUnregisteredUser user =
+  let (Domain.Age age) = user._uage
+   in User
+        { _userName = user._uname,
+          _userAge = age,
+          _userEmail = user._uemail,
+          _userRegistrationDate = user._uregistrationDate
+        }
+
+mapDtoToDomain :: UserDto -> Validation ValidationError Domain.UnregisteredUser
+mapDtoToDomain user =
+  UnregisteredUser <$> validateExistence "name" user._name <*> validateExistence "age" user._age `bindValidation` Domain.makeAge <*> validateExistence "email" user._email <*> validateExistence "registration_date" user._registrationDate
+
 mapDtoToUser :: UserDto -> Validation ValidationError User
 mapDtoToUser user = User <$> validateExistence "name" user._name <*> validateExistence "age" user._age <*> validateExistence "email" user._email <*> validateExistence "registration_date" user._registrationDate
 
@@ -68,17 +83,17 @@ validateExistence _ (Just x) = Success x
 validateExistence colName Nothing = Failure $ ValidationError $ M.fromList [(colName, ["必須の項目です"])]
 
 data UserRepository = UserRepository
-  { create :: UserDto -> IO (Validation ValidationError UserId),
-    getAll :: IO [Domain.User],
-    get :: Int64 -> IO (Maybe Domain.User),
-    update :: Domain.User -> IO (),
+  { create :: Domain.UnregisteredUser -> IO UserId,
+    getAll :: IO [Domain.RegisteredUser],
+    get :: Int64 -> IO (Maybe Domain.RegisteredUser),
+    update :: Domain.RegisteredUser -> IO (),
     delete :: Int64 -> IO ()
   }
 
 userRepository :: ConnectionPool -> UserRepository
 userRepository pool =
   UserRepository
-    { create = mapM (createUser pool) . mapDtoToUser,
+    { create = createUser pool . mapUnregisteredUser,
       getAll = do
         users <- getAllUsers pool
         return $ map mapUserToDomain users,
