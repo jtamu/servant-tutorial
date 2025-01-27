@@ -73,10 +73,11 @@ mapUnregisteredUser user =
 
 mapDtoToDomain :: UserDto -> Validation ValidationError Domain.UnregisteredUser
 mapDtoToDomain user =
-  UnregisteredUser <$> validateExistence "name" user._name <*> validateExistence "age" user._age `bindValidation` Domain.makeAge <*> validateExistence "email" user._email <*> validateExistence "registration_date" user._registrationDate
-
-mapDtoToUser :: UserDto -> Validation ValidationError User
-mapDtoToUser user = User <$> validateExistence "name" user._name <*> validateExistence "age" user._age <*> validateExistence "email" user._email <*> validateExistence "registration_date" user._registrationDate
+  UnregisteredUser
+    <$> validateExistence "name" user._name
+    <*> validateExistence "age" user._age `bindValidation` Domain.makeAge
+    <*> validateExistence "email" user._email
+    <*> validateExistence "registration_date" user._registrationDate
 
 validateExistence :: String -> Maybe a -> Validation ValidationError a
 validateExistence _ (Just x) = Success x
